@@ -37,19 +37,18 @@ The platform will serve two main customer groups:
    * Repeat customers who want faster decision-making.
 
 2. **E-commerce business owners**
-   * **Start-up stores:** businesses that do not yet have their own website or want a ready-made fashion platform.
    * **Small and medium brands:** stores that want to add 3D try-on features to increase sales.
-   * **Established brands:** businesses that already have a website but want to upgrade with a premium feature.
+   * **Medium-sized Start-up stores:** businesses that do not yet have their own website or want a ready-made fashion platform.
 
 #### 5. Proposed Solution
 The system will let users:
 * Create a profile or select a 3D avatar.
 * Enter body measurements or use standard body templates.
-* Choose a clothing item from the catalog.
+* Choose a clothing item from the catalog or upload their own outfit.
 * View the item on the avatar from multiple angles.
 * Change size or color before checkout.
 
-This makes the shopping process more interactive and more reliable than using only photos.
+This makes the shopping process more interactive and more reliable than using only static photos.
 
 #### 6. Product Offering and Pricing Model
 The platform will be sold in two possible ways:

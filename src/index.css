@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #5edc86;
+  --color-accent-dim: #4ebc73;
+  --color-accent-glow: rgba(94, 220, 134, 0.25);
+  --color-accent-glass: rgba(94, 220, 134, 0.1);
+  --color-charcoal: #1a1a1a;
+  --color-bg: #2f3638;
+  --color-bg-2: #242a2b;
+  --color-surface: #374244;
+  --color-surface-2: #435053;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-em: rgba(94, 220, 134, 0.4);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #c2c9cb;
+  --color-text-muted: #8a9598;
+  --color-glass-bg: rgba(47, 54, 56, 0.85);
+  --color-glass-border: rgba(255, 255, 255, 0.05);
+  --color-glass-hover: rgba(255, 255, 255, 0.03);
+
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-inter: "Inter", system-ui, sans-serif;
+
+  --animate-fade-up: fadeUp 0.4s ease forwards;
+  --animate-fade-in: fadeIn 0.3s ease forwards;
+  --animate-pulse-glow: pulse-glow 2.5s ease infinite;
+  --animate-check-in: checkIn 0.2s ease;
+  --animate-spin-360: spin360 1s linear infinite;
+  --animate-scan-line: scanLine 2s linear infinite;
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px var(--color-accent-glow); }
+    50%      { box-shadow: 0 0 40px rgba(16,185,129,0.4); }
+  }
+  @keyframes checkIn {
+    from { transform: scale(0); }
+    to   { transform: scale(1); }
+  }
+  @keyframes spin360 {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes scanLine {
+    0%   { top: 0%; opacity: 0.8; }
+    100% { top: 100%; opacity: 0; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text-primary font-inter min-h-screen overflow-x-hidden;
+  }
+  
+  #root {
+    @apply min-h-screen flex flex-col;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+  
+  /* Input Range styling */
+  input[type='range'] {
+    @apply appearance-none w-full h-1 bg-surface-2 rounded-full outline-none cursor-pointer;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent-glow)] cursor-pointer transition-transform duration-150 ease-in hover:scale-125;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-glass-bg border border-glass-border backdrop-blur-[20px];
+  }
+}
