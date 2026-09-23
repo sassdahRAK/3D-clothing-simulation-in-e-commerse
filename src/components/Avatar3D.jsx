@@ -5,92 +5,55 @@ import {
   Environment,
   ContactShadows,
   useGLTF,
-  useTexture,
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { BODY_SHAPES } from '../data/clothes';
 
-// ─── Preload both models so they're cached ─────────────────────────────────────
-useGLTF.preload('/models/xbot.glb');
-useGLTF.preload('/models/michelle.glb');
+import { SkeletonUtils } from 'three-stdlib';
+import { ClothItem3D } from './canvas/Cloth3D';
 
-// ─── Clothing overlay: real product image on a plane in front of the body ─────
-
-function ClothingTexturePlane({ item, scale }) {
-  const texture = useTexture(item.image);
-  const cfg = getClothingConfig(item, scale);
-  return (
-    <mesh position={cfg.position} rotation={cfg.rotation}>
-      <planeGeometry args={cfg.size} />
-      <meshStandardMaterial
-        map={texture}
-        transparent
-        alphaTest={0.05}
-        roughness={0.7}
-        metalness={0.0}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
-
-function ClothingColorPlane({ item, scale }) {
-  const cfg = getClothingConfig(item, scale);
-  return (
-    <mesh position={cfg.position} rotation={cfg.rotation}>
-      <planeGeometry args={cfg.size} />
-      <meshStandardMaterial
-        color={new THREE.Color(item.meshColor)}
-        transparent
-        opacity={0.85}
-        roughness={0.7}
-        metalness={0}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
-
-// Maps body part → plane position/size relative to the GLB model space
-// Xbot/Michelle are ~1.7 units tall, standing with feet at y=0
-function getClothingConfig(item, scale) {
-  const s = scale || 1;
-  const cat = item.bodyPart || item.category;
-  switch (cat) {
-    case 'torso':
-    case 'top':
-      return { position: [0, 1.22 * s, 0.13 * s], rotation: [0.06, 0, 0], size: [0.72 * s, 0.62 * s] };
-    case 'jacket':
-      return { position: [0, 1.18 * s, 0.13 * s], rotation: [0.05, 0, 0], size: [0.84 * s, 0.72 * s] };
-    case 'legs':
-    case 'pants':
-      return { position: [0, 0.56 * s, 0.12 * s], rotation: [0.04, 0, 0], size: [0.60 * s, 0.90 * s] };
-    case 'lower':
-    case 'shorts':
-      return { position: [0, 0.72 * s, 0.12 * s], rotation: [0.04, 0, 0], size: [0.60 * s, 0.48 * s] };
-    case 'full':
-    case 'dress':
-    case 'set':
-      return { position: [0, 0.88 * s, 0.13 * s], rotation: [0.04, 0, 0], size: [0.80 * s, 1.42 * s] };
-    default:
-      return { position: [0, 1.0  * s, 0.13 * s], rotation: [0.05, 0, 0], size: [0.75 * s, 0.80 * s] };
-  }
-}
+// ─── Preload models so they're cached ──────────────────────────────────────────
+useGLTF.preload('/models/rp_posed_00178_29.glb');
+useGLTF.preload('/models/Ch06_nonPBR.glb');
 
 // ─── The loaded human model ────────────────────────────────────────────────────
 
 function HumanModel({ avatarConfig, selectedItems, onRotationChange }) {
   const controlsRef = useRef();
 
-  const isFemale = avatarConfig.gender === 'F';
-  const modelPath = isFemale ? '/models/michelle.glb' : '/models/xbot.glb';
+  // Load rp_posed_00178_29.glb for female avatars, Ch06_nonPBR.glb for male
+  const isFemale =
+    avatarConfig?.gender === 'Female' ||
+    avatarConfig?.gender === 'F';
+  const modelPath = isFemale ? '/models/rp_posed_00178_29.glb' : '/models/Ch06_nonPBR.glb';
 
   const { scene } = useGLTF(modelPath);
 
-  // Clone the scene so multiple instances don't share state
-  const clonedScene = scene.clone(true);
+  // Clone using SkeletonUtils to allow independent bone posing
+  const clonedScene = SkeletonUtils.clone(scene);
+
+  // Renderpeople models are exported with unit scale 0.001 (mm), raw height ~0.1725m.
+  // Scale by 10 to bring to standard life-size 1.725m. Ch06 is already 1.825m in meters.
+  const isRenderPeople = modelPath.includes('rp_posed');
+  const isCh06 = modelPath.includes('Ch06');
+  const baseModelScale = isRenderPeople ? 10 : 1;
+
+  // Pose male model arms down from T-pose to natural standing casual pose
+  if (!isFemale && isCh06) {
+    const leftArm = clonedScene.getObjectByName('mixamorig9LeftArm');
+    const rightArm = clonedScene.getObjectByName('mixamorig9RightArm');
+    const leftForeArm = clonedScene.getObjectByName('mixamorig9LeftForeArm');
+    const rightForeArm = clonedScene.getObjectByName('mixamorig9RightForeArm');
+
+    if (leftArm && rightArm) {
+      leftArm.rotation.set(0, 0, 0);
+      rightArm.rotation.set(0, 0, 0);
+      leftArm.rotateX(1.25);
+      rightArm.rotateX(1.25);
+      if (leftForeArm) leftForeArm.rotateX(0.15);
+      if (rightForeArm) rightForeArm.rotateX(0.15);
+    }
+  }
 
   // ── Body scale from height/weight/shape ──────────────────────────────────
   const shape = BODY_SHAPES[avatarConfig.bodyShape] || BODY_SHAPES.M;
@@ -98,27 +61,23 @@ function HumanModel({ avatarConfig, selectedItems, onRotationChange }) {
   const widthScale  = shape.torsoScale[0] *
     THREE.MathUtils.mapLinear(avatarConfig.weight, 40, 160, 0.88, 1.18);
 
-  // Apply skin tone tint to the model's materials
-  const skinColor = new THREE.Color(avatarConfig.skinTone);
+  // Apply materials (preserve textures for photorealistic models)
   clonedScene.traverse((child) => {
     if (child.isMesh) {
-      // Clone material so we don't mutate the cached original
-      child.material = child.material.clone();
-      child.material.roughness = 0.6;
-      child.material.metalness = 0.0;
       child.castShadow    = true;
       child.receiveShadow = true;
 
-      // Skin areas — tint by detected material name
-      const name = (child.material.name || child.name || '').toLowerCase();
-      if (
-        name.includes('skin') ||
-        name.includes('body') ||
-        name.includes('face') ||
-        name.includes('hands') ||
-        name.includes('head')
-      ) {
-        child.material.color = skinColor;
+      if (child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((mat) => {
+          mat.roughness = 0.55;
+          mat.metalness = 0.02;
+          if (mat.name && mat.name.toLowerCase().includes('eyelashes')) {
+            mat.transparent = true;
+            mat.alphaTest = 0.15;
+            mat.depthWrite = true;
+          }
+        });
       }
     }
   });
@@ -158,16 +117,20 @@ function HumanModel({ avatarConfig, selectedItems, onRotationChange }) {
         scale={[widthScale, heightScale, widthScale]}
         position={[0, 0, 0]}
       >
-        <primitive object={clonedScene} />
+        <primitive
+          object={clonedScene}
+          scale={[baseModelScale, baseModelScale, baseModelScale]}
+        />
 
-        {/* Clothing overlays */}
-        {clothItems.map((item) =>
-          item.image ? (
-            <ClothingTexturePlane key={item.id} item={item} scale={1} />
-          ) : (
-            <ClothingColorPlane key={item.id} item={item} scale={1} />
-          )
-        )}
+        {/* 3D Contoured Folded Clothing */}
+        {clothItems.map((item) => (
+          <ClothItem3D
+            key={item.id}
+            item={item}
+            scale={1}
+            gender={isFemale ? 'Female' : 'Male'}
+          />
+        ))}
       </group>
     </>
   );
@@ -184,11 +147,11 @@ function LoadingStand() {
     <group>
       <mesh ref={mesh} position={[0, 0.9, 0]}>
         <torusGeometry args={[0.25, 0.04, 12, 48]} />
-        <meshStandardMaterial color="#20b2aa" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial color="#e53535" roughness={0.3} metalness={0.6} />
       </mesh>
       <mesh position={[0, 0.9, 0]}>
         <torusGeometry args={[0.18, 0.03, 10, 36]} rotation={[Math.PI / 2, 0, 0]} />
-        <meshStandardMaterial color="#20b2aa" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial color="#e53535" roughness={0.3} metalness={0.6} />
       </mesh>
     </group>
   );
@@ -208,9 +171,9 @@ export default function Avatar3D({ avatarConfig, selectedItems, onRotationChange
         toneMappingExposure: 1.2,
       }}
     >
-      {/* Background */}
-      <color attach="background" args={['#f0f0f0']} />
-      <fog attach="fog" args={['#f0f0f0', 7, 18]} />
+      {/* Background — matches dark charcoal theme */}
+      <color attach="background" args={['#191d1e']} />
+      <fog attach="fog" args={['#191d1e', 8, 20]} />
 
       {/* ── Lighting — warm skin tones + accent accent ── */}
       <ambientLight intensity={0.5} color="#d0dde8" />
@@ -236,8 +199,8 @@ export default function Avatar3D({ avatarConfig, selectedItems, onRotationChange
       {/* Under-chin fill — removes harsh under-shadow */}
       <directionalLight position={[0, -2, 3]} intensity={0.3} color="#d0b8a0" />
 
-      {/* Emerald floor glow */}
-      <pointLight position={[0, -0.1, 1.2]} intensity={2.0} color="#20b2aa" distance={4} />
+      {/* Subtle warm floor bounce */}
+      <pointLight position={[0, -0.1, 1.2]} intensity={0.6} color="#d0b8a0" distance={4} />
 
       {/* HDR — critical for realistic skin/material reflections */}
       <Environment preset="apartment" />
@@ -263,7 +226,7 @@ export default function Avatar3D({ avatarConfig, selectedItems, onRotationChange
       </Suspense>
 
       {/* Floor grid */}
-      <gridHelper args={[8, 22, '#cccccc', '#e5e5e5']} position={[0, -0.03, 0]} />
+      <gridHelper args={[8, 22, '#2e3638', '#242b2d']} position={[0, -0.03, 0]} />
     </Canvas>
   );
 }

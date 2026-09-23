@@ -1,21 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-accent: #5edc86;
-  --color-accent-dim: #4ebc73;
-  --color-accent-glow: rgba(94, 220, 134, 0.25);
-  --color-accent-glass: rgba(94, 220, 134, 0.1);
-  --color-charcoal: #1a1a1a;
-  --color-bg: #2f3638;
-  --color-bg-2: #242a2b;
-  --color-surface: #374244;
-  --color-surface-2: #435053;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-em: rgba(94, 220, 134, 0.4);
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #c2c9cb;
-  --color-text-muted: #8a9598;
-  --color-glass-bg: rgba(47, 54, 56, 0.85);
+  /* ── 10% Accent (red) — CTAs, prices, selection borders, progress fills ── */
+  --color-accent: #e53535;
+  --color-accent-dim: #c42b2b;
+  --color-accent-glow: rgba(229, 53, 53, 0.22);
+  --color-accent-glass: rgba(229, 53, 53, 0.08);
+
+  /* ── Secondary warm accent (amber) — borrowed from reference site's orange spirit ── */
+  --color-accent-warm: #f5a835;
+  --color-accent-warm-glow: rgba(245, 168, 53, 0.2);
+  --color-accent-warm-glass: rgba(245, 168, 53, 0.07);
+
+  /* ── 60% Base — deep editorial black ── */
+  --color-bg: #0f1214;
+  --color-bg-2: #090c0e;
+
+  /* ── 30% Surfaces — cards, panels, elevated layers ── */
+  --color-surface: #1c2224;      /* cards, base elevation          */
+  --color-surface-2: #262e31;    /* higher elevation, inputs       */
+  --color-surface-3: #333c3f;    /* highest: active tabs, hovers   */
+
+  /* ── Borders ── */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-em: rgba(229, 53, 53, 0.4);
+
+  /* ── Text ── */
+  --color-text-primary: #f0f4f5;
+  --color-text-secondary: #8fa0a4;
+  --color-text-muted: #4a6065;
+
+  /* ── Glass (header) ── */
+  --color-charcoal: #0f1214;
+  --color-glass-bg: rgba(15, 18, 20, 0.94);
   --color-glass-border: rgba(255, 255, 255, 0.05);
   --color-glass-hover: rgba(255, 255, 255, 0.03);
 
@@ -28,6 +45,7 @@
   --animate-check-in: checkIn 0.2s ease;
   --animate-spin-360: spin360 1s linear infinite;
   --animate-scan-line: scanLine 2s linear infinite;
+  --animate-float: float 3s ease-in-out infinite;
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -39,7 +57,7 @@
   }
   @keyframes pulse-glow {
     0%, 100% { box-shadow: 0 0 20px var(--color-accent-glow); }
-    50%      { box-shadow: 0 0 40px rgba(16,185,129,0.4); }
+    50%      { box-shadow: 0 0 40px rgba(229, 53, 53, 0.4); }
   }
   @keyframes checkIn {
     from { transform: scale(0); }
@@ -53,26 +71,44 @@
     0%   { top: 0%; opacity: 0.8; }
     100% { top: 100%; opacity: 0; }
   }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+  @keyframes orb-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -30px) scale(1.08); }
+    66%      { transform: translate(-25px, 20px) scale(0.94); }
+  }
+  @keyframes orb-drift-reverse {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(-30px, 25px) scale(0.96); }
+    66%      { transform: translate(35px, -15px) scale(1.06); }
+  }
+  @keyframes ping-slow {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50%      { transform: scale(1.8); opacity: 0; }
+  }
 }
 
 @layer base {
   body {
     @apply bg-bg text-text-primary font-inter min-h-screen overflow-x-hidden;
   }
-  
+
   #root {
     @apply min-h-screen flex flex-col;
   }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--color-surface); }
-  ::-webkit-scrollbar-thumb { background: var(--color-surface-2); border-radius: 3px; }
+  /* Refined scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-  
+
   /* Input Range styling */
   input[type='range'] {
-    @apply appearance-none w-full h-1 bg-surface-2 rounded-full outline-none cursor-pointer;
+    @apply appearance-none w-full h-0.5 bg-surface-2 rounded-full outline-none cursor-pointer;
   }
   input[type='range']::-webkit-slider-thumb {
     @apply appearance-none w-4 h-4 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent-glow)] cursor-pointer transition-transform duration-150 ease-in hover:scale-125;
@@ -82,5 +118,87 @@
 @layer utilities {
   .glass {
     @apply bg-glass-bg border border-glass-border backdrop-blur-[20px];
+  }
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  .pb-safe-nav {
+    padding-bottom: max(6rem, calc(4rem + env(safe-area-inset-bottom)));
+  }
+
+  /* Card hover lift — editorial depth animation from reference site */
+  .card-lift {
+    transition: transform 0.22s ease-out, box-shadow 0.22s ease-out;
+  }
+  .card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Editorial section tag (e.g. "Step 1 of 6 — Catalog") */
+  .editorial-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-inter);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-accent-warm);
+  }
+  .editorial-tag::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: var(--color-accent-warm);
+    opacity: 0.7;
+  }
+
+  /* Ambient background orb system */
+  .ambient-orb-red {
+    position: fixed;
+    top: -8%;
+    left: -4%;
+    width: 42vw;
+    height: 42vw;
+    max-width: 500px;
+    max-height: 500px;
+    background: radial-gradient(ellipse, rgba(229, 53, 53, 0.055) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: orb-drift 14s ease-in-out infinite;
+    z-index: 0;
+  }
+  .ambient-orb-warm {
+    position: fixed;
+    bottom: 8%;
+    right: -4%;
+    width: 38vw;
+    height: 38vw;
+    max-width: 420px;
+    max-height: 420px;
+    background: radial-gradient(ellipse, rgba(245, 168, 53, 0.04) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: orb-drift-reverse 18s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  /* Gradient section divider */
+  .section-line {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--color-border) 30%, var(--color-accent-warm)/20 60%, transparent);
+  }
+
+  /* Warm accent text */
+  .text-accent-warm {
+    color: var(--color-accent-warm);
+  }
+
+  /* Live indicator ping animation */
+  .animate-ping-slow {
+    animation: ping-slow 2.2s ease-in-out infinite;
   }
 }

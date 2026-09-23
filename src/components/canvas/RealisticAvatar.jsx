@@ -1,64 +1,108 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { SkeletonUtils } from 'three-stdlib';
 import * as THREE from 'three';
+import { BODY_SHAPES } from '../../data/clothes';
+import { ClothItem3D } from './Cloth3D';
 
-export default function RealisticAvatar({ ...props }) {
+useGLTF.preload('/models/rp_posed_00178_29.glb');
+useGLTF.preload('/models/Ch06_nonPBR.glb');
+
+export default function RealisticAvatar({ avatarConfig, selectedItems = [], ...props }) {
   const group = useRef();
-  // Using michelle.glb as a placeholder for our realistic avatar
-  const { scene } = useGLTF('/models/michelle.glb');
 
-  // Apply highly realistic materials when the scene loads
+  // Support female photogrammetry scan (rp_posed) and male human model (Ch06_nonPBR)
+  const isFemale =
+    !avatarConfig ||
+    avatarConfig.gender === 'Female' ||
+    avatarConfig.gender === 'F';
+  const modelPath = isFemale ? '/models/rp_posed_00178_29.glb' : '/models/Ch06_nonPBR.glb';
+
+  const { scene } = useGLTF(modelPath);
+
+  // Use SkeletonUtils.clone to properly clone skinned meshes & bones independently
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
+
+  // Renderpeople models are exported with unit scale 0.001 (mm), raw height ~0.1725m.
+  // Scale by 10 to bring to standard life-size 1.725m. Ch06 is already 1.825m in meters (scale 1).
+  const isRenderPeople = modelPath.includes('rp_posed');
+  const baseModelScale = isRenderPeople ? 10 : 1;
+
+  // Body scale adjustments based on user height, weight, and shape
+  const shape = (avatarConfig && BODY_SHAPES[avatarConfig.bodyShape]) || BODY_SHAPES.M;
+  const heightScale = avatarConfig?.height
+    ? THREE.MathUtils.mapLinear(avatarConfig.height, 140, 215, 0.86, 1.14)
+    : 1.0;
+  const widthScale = avatarConfig?.weight
+    ? (shape.torsoScale ? shape.torsoScale[0] : 1.0) *
+      THREE.MathUtils.mapLinear(avatarConfig.weight, 40, 160, 0.88, 1.18)
+    : 1.0;
+
+  // Apply natural standing pose and realistic materials
   useEffect(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child.isMesh) {
-          // Enable shadows
-          child.castShadow = true;
-          child.receiveShadow = true;
+    // For male model (Ch06_nonPBR), pose arms down from T-pose to natural standing casual pose
+    if (!isFemale) {
+      const leftArm = clonedScene.getObjectByName('mixamorig9LeftArm');
+      const rightArm = clonedScene.getObjectByName('mixamorig9RightArm');
+      const leftForeArm = clonedScene.getObjectByName('mixamorig9LeftForeArm');
+      const rightForeArm = clonedScene.getObjectByName('mixamorig9RightForeArm');
 
-          // If the material is a StandardMaterial (like skin or fabric)
-          if (child.material && child.material.isMeshStandardMaterial) {
-            
-            // Check if this is likely a skin material (heuristics based on typical naming)
-            const isSkin = child.name.toLowerCase().includes('skin') || 
-                           child.name.toLowerCase().includes('body') ||
-                           child.name.toLowerCase().includes('face');
-
-            if (isSkin) {
-              // Upgrade skin to MeshPhysicalMaterial for subsurface scattering approximation
-              const physicalSkin = new THREE.MeshPhysicalMaterial({
-                map: child.material.map,
-                normalMap: child.material.normalMap,
-                color: child.material.color,
-                roughness: 0.4, // Skin is slightly oily/rough
-                metalness: 0.1,
-                
-                // Advanced Physical properties
-                clearcoat: 0.1,         // Subtle sweat/oil reflection
-                clearcoatRoughness: 0.2,
-                
-                // Transmission and thickness simulate light bleeding through skin (SSS)
-                transmission: 0.1, 
-                thickness: 0.5,
-              });
-              
-              child.material = physicalSkin;
-            } else {
-              // For clothing/fabric, enhance roughness to look like cloth
-              child.material.roughness = 0.8;
-              // If we had a sheen map, we could use MeshPhysicalMaterial here too
-            }
-          }
-        }
-      });
+      if (leftArm && rightArm) {
+        leftArm.rotation.set(0, 0, 0);
+        rightArm.rotation.set(0, 0, 0);
+        leftArm.rotateX(1.25);
+        rightArm.rotateX(1.25);
+        if (leftForeArm) leftForeArm.rotateX(0.15);
+        if (rightForeArm) rightForeArm.rotateX(0.15);
+      }
     }
-  }, [scene]);
+
+    clonedScene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+
+        if (child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((mat) => {
+            mat.roughness = 0.55;
+            mat.metalness = 0.02;
+            if (mat.name && mat.name.toLowerCase().includes('eyelashes')) {
+              mat.transparent = true;
+              mat.alphaTest = 0.15;
+              mat.depthWrite = true;
+            }
+          });
+        }
+      }
+    });
+  }, [clonedScene, isFemale]);
+
+  // Selected clothing items to overlay on the avatar
+  const fullItem = selectedItems.find((i) => ['full', 'dress', 'set'].includes(i.bodyPart || i.category));
+  const torsoItem = !fullItem && selectedItems.find((i) => ['torso', 'top', 'jacket'].includes(i.bodyPart || i.category));
+  const bottomItem = !fullItem && selectedItems.find((i) => ['legs', 'lower', 'pants', 'shorts'].includes(i.bodyPart || i.category));
+  const clothItems = [fullItem, torsoItem, bottomItem].filter(Boolean);
+
+  const genderStr = isFemale ? 'Female' : 'Male';
 
   return (
     <group ref={group} {...props} dispose={null}>
-      <primitive object={scene} />
+      <group scale={[widthScale, heightScale, widthScale]}>
+        <primitive
+          object={clonedScene}
+          scale={[baseModelScale, baseModelScale, baseModelScale]}
+        />
+
+        {clothItems.map((item) => (
+          <ClothItem3D
+            key={item.id}
+            item={item}
+            scale={1}
+            gender={genderStr}
+          />
+        ))}
+      </group>
     </group>
   );
 }
-
-useGLTF.preload('/models/michelle.glb');

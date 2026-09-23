@@ -1,17 +1,16 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Check } from 'lucide-react';
 import Avatar3D from './Avatar3D';
 import { CLOTHES, SKIN_TONES } from '../data/clothes';
-
-// ─── Category emoji map ────────────────────────────────────────────────────────
-const CAT_EMOJI = { jacket: '🧥', pants: '👖', top: '👕', dress: '👗', shorts: '🩳', set: '🤸' };
+import { ClothingIcon } from './ClothingIcon';
 
 // ─── Personalization panel row ────────────────────────────────────────────────
 function PanelRow({ label, children }) {
   return (
     <div className="mb-[18px]">
-      <div className="text-[0.6rem] font-bold tracking-[0.12em] uppercase text-accent mb-[7px] flex items-center gap-[5px]">
-        <span className="w-[5px] h-[5px] rounded-full bg-accent inline-block" />
+      <div className="text-[0.6rem] font-bold tracking-[0.12em] uppercase text-text-muted mb-[7px] flex items-center gap-[5px]">
+        <span className="w-[5px] h-[5px] rounded-full bg-surface-3 inline-block" />
         {label}
       </div>
       {children}
@@ -36,7 +35,7 @@ function SidebarClothCard({ item, isApplied, onClick, onDragStart }) {
           className="w-full aspect-square flex items-center justify-center text-[1.5rem]"
           style={{ background: item.meshColor + '22' }}
         >
-          {CAT_EMOJI[item.category] || '👔'}
+          <ClothingIcon category={item.category} size={24} className="text-text-muted" />
         </div>
       )}
       {isApplied && (
@@ -67,7 +66,9 @@ function CheckoutModal({ items, onClose }) {
         className="bg-surface border border-border-em rounded-xl p-9 max-w-[420px] w-full shadow-[0_0_80px_rgba(16,185,129,0.2)]"
       >
         <div className="text-center mb-6">
-          <div className="text-[3rem] mb-2">✅</div>
+          <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
+            <Check size={28} className="text-accent" />
+          </div>
           <h2 className="font-extrabold text-[1.4rem] tracking-tight">
             Your Fit is <span className="text-accent">Perfect!</span>
           </h2>
@@ -93,7 +94,7 @@ function CheckoutModal({ items, onClose }) {
         </div>
 
         <button
-          className="inline-flex items-center justify-center gap-2 rounded bg-accent text-charcoal font-bebas tracking-[0.05em] cursor-pointer outline-none transition-all duration-200 ease-out whitespace-nowrap hover:bg-accent-dim hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(94,220,134,0.25)] active:translate-y-0 disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none border-none w-full h-[52px] text-base"
+          className="inline-flex items-center justify-center gap-2 rounded bg-accent text-white font-bebas tracking-[0.05em] cursor-pointer outline-none transition-all duration-200 ease-out whitespace-nowrap hover:bg-accent-dim hover:-translate-y-[1px] hover:shadow-[0_8px_24px_var(--color-accent-glow)] active:translate-y-0 disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none border-none w-full h-[52px] text-base"
           onClick={onClose}
         >
           Confirm & Pay 💳
@@ -192,11 +193,11 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
             ← Back
           </button>
           <div>
-            <p className="text-[0.6rem] font-bold tracking-[0.12em] uppercase text-accent">
+            <p className="text-[0.6rem] font-bold tracking-[0.12em] uppercase text-text-muted">
               Step 3 — 3D Mirror
             </p>
             <h2 className="text-[1.1rem] font-extrabold tracking-[-0.02em] leading-none">
-              YOUR PERSONAL <span className="text-accent">MATCH</span>
+              YOUR PERSONAL MATCH
             </h2>
           </div>
         </div>
@@ -205,13 +206,13 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
         <div className="flex gap-1.5">
           <button
             onClick={() => setSplitView(false)}
-            className={`px-3.5 py-1.5 rounded-lg text-[0.75rem] font-semibold font-inter transition-all duration-150 ease-in-out cursor-pointer border ${!splitView ? 'border-accent bg-accent-glass text-accent' : 'border-border bg-transparent text-text-secondary'}`}
+            className={`px-3.5 py-1.5 rounded-lg text-[0.75rem] font-semibold font-inter transition-all duration-150 ease-in-out cursor-pointer border ${!splitView ? 'border-border bg-surface-3 text-text-primary' : 'border-border bg-transparent text-text-secondary'}`}
           >
             Full View
           </button>
           <button
             onClick={() => setSplitView(true)}
-            className={`px-3.5 py-1.5 rounded-lg text-[0.75rem] font-semibold font-inter transition-all duration-150 ease-in-out cursor-pointer border ${splitView ? 'border-accent bg-accent-glass text-accent' : 'border-border bg-transparent text-text-secondary'}`}
+            className={`px-3.5 py-1.5 rounded-lg text-[0.75rem] font-semibold font-inter transition-all duration-150 ease-in-out cursor-pointer border ${splitView ? 'border-border bg-surface-3 text-text-primary' : 'border-border bg-transparent text-text-secondary'}`}
           >
             ⊢ Split Compare
           </button>
@@ -260,12 +261,12 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-full aspect-square object-cover bg-[#f5f5f0]" />
                 ) : (
-                  <div className="w-full aspect-square flex items-center justify-center text-[1.8rem]" style={{ background: item.meshColor + '22' }}>
-                    {CAT_EMOJI[item.category] || '👔'}
+                  <div className="w-full aspect-square flex items-center justify-center" style={{ background: item.meshColor + '22' }}>
+                    <ClothingIcon category={item.category} size={28} className="text-text-muted" />
                   </div>
                 )}
                 <div className="px-2 py-1.5">
-                  <div className="text-[0.58rem] font-bold tracking-[0.06em] uppercase text-accent">
+                  <div className="text-[0.58rem] font-bold tracking-[0.06em] uppercase text-text-muted">
                     ITEM {idx + 1}
                   </div>
                   <div className="text-[0.7rem] font-semibold text-text-primary leading-tight">
@@ -286,9 +287,9 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
               Measurements
             </p>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-[2px] h-[40px] bg-accent opacity-60 shrink-0" />
+              <div className="w-[2px] h-[40px] bg-surface-3 shrink-0" />
               <div>
-                <div className="text-[0.9rem] font-extrabold text-accent">{avatarConfig.height} cm</div>
+                <div className="text-[0.9rem] font-extrabold text-text-primary">{avatarConfig.height} cm</div>
                 <div className="text-[0.65rem] text-text-muted">Height</div>
               </div>
             </div>
@@ -332,7 +333,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                   }
                 }}
               >
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 text-[0.65rem] font-bold tracking-[0.08em] uppercase text-accent bg-accent-glass border border-border-em rounded-md px-2.5 py-1 z-10">
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 text-[0.65rem] font-bold tracking-[0.08em] uppercase text-text-muted bg-surface border border-border rounded-md px-2.5 py-1 z-10">
                   Compare ← Drop here
                 </div>
                 <Avatar3D
@@ -355,7 +356,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
           <div className="absolute inset-0 border-2 border-dashed border-transparent transition-colors duration-200 pointer-events-none drop-hint" />
 
           {/* 360° badge */}
-          <div className="absolute top-4 right-4 bg-glass-bg backdrop-blur-md border border-border-em rounded-full w-[54px] h-[54px] flex flex-col items-center justify-center text-[0.55rem] font-extrabold text-accent tracking-[0.02em]">
+          <div className="absolute top-4 right-4 bg-glass-bg backdrop-blur-md border border-border rounded-full w-[54px] h-[54px] flex flex-col items-center justify-center text-[0.55rem] font-extrabold text-text-secondary tracking-[0.02em]">
             <span className="text-[1.1rem] leading-none">↻</span>
             <span>360°</span>
           </div>
@@ -364,7 +365,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
           {dressedItems.length === 0 && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
               <p className="text-text-muted text-[0.9rem] mb-1.5">
-                👆 Drag or click items from the right panel
+                Drag or click items from the right panel
               </p>
               <p className="text-text-muted text-[0.75rem]">
                 Then drag to rotate the mannequin 360°
@@ -374,7 +375,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
 
           {/* Bottom 360° slider */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[260px] bg-glass-bg backdrop-blur-[16px] border border-border rounded-[40px] px-[18px] py-[10px] flex items-center gap-3">
-            <span className="text-[0.75rem] text-accent font-bold shrink-0">0°</span>
+            <span className="text-[0.75rem] text-text-secondary shrink-0">0°</span>
             <div className="flex-1 relative">
               <input
                 type="range"
@@ -385,7 +386,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                 className="w-full"
               />
             </div>
-            <span className="text-[0.75rem] text-accent font-bold shrink-0 min-w-[36px]">
+            <span className="text-[0.75rem] text-text-secondary shrink-0 min-w-[36px]">
               {rotationDeg}°
             </span>
           </div>
@@ -446,7 +447,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                 <div className="flex bg-[var(--color-surface-2)] p-[3px] rounded-lg border border-border">
                   {['S', 'M', 'L', 'XL'].map((s) => (
                     <button key={s} 
-                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.bodyShape === s ? 'bg-surface text-accent shadow-sm' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.bodyShape === s ? 'bg-surface-3 text-text-primary' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
                       onClick={() => updateConfig('bodyShape', s)}>
                       {s}
                     </button>
@@ -459,7 +460,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                 <div className="flex bg-[var(--color-surface-2)] p-[3px] rounded-lg border border-border">
                   {[['M', '♂'], ['F', '♀'], ['X', '⊕']].map(([g, icon]) => (
                     <button key={g} 
-                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.gender === g ? 'bg-surface text-accent shadow-sm' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.gender === g ? 'bg-surface-3 text-text-primary' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
                       onClick={() => updateConfig('gender', g)}
                       title={g === 'M' ? 'Male' : g === 'F' ? 'Female' : 'Non-binary'}>
                       {icon}
@@ -485,7 +486,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
                 <div className="flex bg-[var(--color-surface-2)] p-[3px] rounded-lg border border-border">
                   {['S', 'M', 'L', 'XL'].map((s) => (
                     <button key={s} 
-                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.bodyShape === s ? 'bg-surface text-accent shadow-sm' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 py-1.5 px-0 text-[0.7rem] font-bold rounded-[5px] border-none transition-colors cursor-pointer ${avatarConfig.bodyShape === s ? 'bg-surface-3 text-text-primary' : 'bg-transparent text-text-secondary hover:text-text-primary'}`}
                       onClick={() => updateConfig('bodyShape', s)}>
                       {s}
                     </button>
@@ -506,7 +507,7 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
               style={{ background: item.meshColor + '33', borderColor: item.meshColor }}>
               {item.image
                 ? <img src={item.image} alt="" className="w-full h-full object-cover" />
-                : <span className="text-base">{CAT_EMOJI[item.category] || '👔'}</span>
+                : <ClothingIcon category={item.category} size={18} className="text-text-muted" />
               }
             </div>
           ))}
@@ -522,11 +523,11 @@ export default function MirrorScreen({ selectedItems, avatarConfig, onAvatarChan
 
         {/* CTA */}
         <button
-          className="inline-flex items-center justify-center gap-2 rounded bg-accent text-charcoal font-bebas text-[1rem] tracking-[0.02em] cursor-pointer outline-none transition-all duration-200 ease-out hover:bg-accent-dim hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(94,220,134,0.25)] active:translate-y-0 disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none h-[52px] px-10 animate-pulse-glow border-none"
+          className="inline-flex items-center justify-center gap-2 rounded bg-accent text-white font-bebas text-[1rem] tracking-[0.02em] cursor-pointer outline-none transition-all duration-200 ease-out hover:bg-accent-dim hover:-translate-y-[1px] hover:shadow-[0_8px_24px_var(--color-accent-glow)] active:translate-y-0 disabled:opacity-35 disabled:cursor-not-allowed disabled:transform-none h-[52px] px-10 animate-pulse-glow border-none"
           onClick={() => setShowCheckout(true)}
           disabled={dressedItems.length === 0}
         >
-          ✓ FINALIZE & CHECKOUT
+          <Check size={16} strokeWidth={2.5} /> FINALIZE & CHECKOUT
         </button>
       </div>
 

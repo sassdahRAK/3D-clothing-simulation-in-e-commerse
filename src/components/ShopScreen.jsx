@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CLOTHES } from '../data/clothes';
+import { ClothingIcon } from './ClothingIcon';
 
 // ─── Category filter tabs ──────────────────────────────────────────────────────
-const CATEGORIES = ['All', 'Jacket', 'Pants', 'Top', 'Dress', 'Shorts', 'Set'];
-
-// ─── Color swatches for "no image" items ──────────────────────────────────────
-const CATEGORY_EMOJI = {
-  jacket:  '🧥',
-  pants:   '👖',
-  top:     '👕',
-  dress:   '👗',
-  shorts:  '🩳',
-  set:     '🤸',
-};
+const CATEGORIES = ['All', 'Jacket', 'Pants', 'Top', 'Dress', 'Shorts', 'Skirt', 'Accessories', 'Set'];
 
 export default function ShopScreen({ selectedItems, onSelect, onNext }) {
   const [activeFilter, setActiveFilter] = useState('All');
@@ -121,10 +112,10 @@ export default function ShopScreen({ selectedItems, onSelect, onNext }) {
                       />
                     ) : (
                       <div
-                        className="w-full aspect-[4/5] flex items-center justify-center text-[3rem]"
+                        className="w-full aspect-[4/5] flex items-center justify-center"
                         style={{ background: item.meshColor + '22' }}
                       >
-                        {CATEGORY_EMOJI[item.category] || '👔'}
+                        <ClothingIcon category={item.category} size={48} className="text-text-muted" />
                       </div>
                     )}
 
@@ -163,7 +154,7 @@ export default function ShopScreen({ selectedItems, onSelect, onNext }) {
               {item.image ? (
                 <img src={item.image} alt="" className="w-full h-full object-cover" />
               ) : (
-                CATEGORY_EMOJI[item.category] || '👔'
+                <ClothingIcon category={item.category} size={20} className="text-text-muted" />
               )}
             </div>
           ))}
